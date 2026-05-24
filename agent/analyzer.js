@@ -3,7 +3,7 @@
  * The "critic" that finds patterns across multiple papers.
  */
 
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { callGemini } = require('./gemini');
 
 const ANALYSIS_PROMPT = `You are a senior research scientist performing a meta-analysis of academic papers. Analyze the following set of papers and produce a comprehensive cross-paper analysis.
 
@@ -53,9 +53,6 @@ Be specific and cite paper titles. Respond ONLY with valid JSON.`;
  * @returns {Promise<Object>} Analysis results
  */
 async function analyzePapers(papers, plan, apiKey, onProgress) {
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-
   onProgress && onProgress({
     type: 'analyze_start',
     message: `Performing cross-paper analysis on ${papers.length} papers...`
@@ -75,12 +72,11 @@ Relevance Score: ${p.relevanceScore || 'N/A'}`
   )).join('\n\n---\n\n');
 
   try {
-    const result = await model.generateContent([
+    const responseText = await callGemini(apiKey, [
       { text: ANALYSIS_PROMPT },
       { text: `Research Goal: "${plan.researchGoal}"\nMain Topic: "${plan.mainTopic}"\n\nPapers to analyze:\n\n${paperSummaries}` }
     ]);
 
-    const responseText = result.response.text();
     let jsonStr = responseText;
     const jsonMatch = responseText.match(/```(?:json)?\s*([\s\S]*?)```/);
     if (jsonMatch) {

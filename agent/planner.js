@@ -3,7 +3,7 @@
  * The "brain" that turns a high-level research topic into actionable sub-queries.
  */
 
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { callGemini } = require('./gemini');
 
 const PLANNING_PROMPT = `You are an expert research strategist. Your job is to decompose a research topic into targeted sub-queries for academic paper search.
 
@@ -36,24 +36,19 @@ Rules:
  * @returns {Promise<Object>} Research plan
  */
 async function planResearch(topic, apiKey) {
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-
-  const result = await model.generateContent([
-    { text: PLANNING_PROMPT },
-    { text: `Research topic: "${topic}"` }
-  ]);
-
-  const responseText = result.response.text();
-
-  // Extract JSON from response (handle markdown code blocks)
-  let jsonStr = responseText;
-  const jsonMatch = responseText.match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (jsonMatch) {
-    jsonStr = jsonMatch[1].trim();
-  }
-
   try {
+    const responseText = await callGemini(apiKey, [
+      { text: PLANNING_PROMPT },
+      { text: `Research topic: "${topic}"` }
+    ]);
+
+    // Extract JSON from response (handle markdown code blocks)
+    let jsonStr = responseText;
+    const jsonMatch = responseText.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (jsonMatch) {
+      jsonStr = jsonMatch[1].trim();
+    }
+
     const plan = JSON.parse(jsonStr);
 
     // Validate structure
@@ -64,7 +59,7 @@ async function planResearch(topic, apiKey) {
     return plan;
   } catch (e) {
     // Fallback: generate basic plan
-    console.warn('Failed to parse plan, using fallback:', e.message);
+    console.warn('Planner failed, using fallback:', e.message);
     return {
       mainTopic: topic,
       researchGoal: `Comprehensive review of ${topic}`,

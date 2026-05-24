@@ -3,7 +3,7 @@
  * Uses Gemini to pull out key findings, methodology, and relevance scores.
  */
 
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { callGemini, sleep } = require('./gemini');
 
 const EXTRACTION_PROMPT = `You are an expert academic paper analyst. Given a batch of paper abstracts, extract structured information from each.
 
@@ -30,11 +30,8 @@ Respond ONLY with valid JSON, no markdown.`;
  * @returns {Promise<Array>} Enriched paper objects
  */
 async function extractPaperInfo(papers, researchGoal, apiKey, onProgress) {
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-
-  // Process in batches of 5 to stay within context limits
-  const batchSize = 5;
+  // Process in larger batches of 12 to minimize Gemini API calls and rate-limiting
+  const batchSize = 12;
   const enrichedPapers = [];
 
   for (let i = 0; i < papers.length; i += batchSize) {
@@ -53,12 +50,11 @@ async function extractPaperInfo(papers, researchGoal, apiKey, onProgress) {
     )).join('\n---\n');
 
     try {
-      const result = await model.generateContent([
+      const responseText = await callGemini(apiKey, [
         { text: EXTRACTION_PROMPT },
         { text: `Research goal: "${researchGoal}"\n\n${paperSummaries}` }
       ]);
 
-      const responseText = result.response.text();
       let jsonStr = responseText;
       const jsonMatch = responseText.match(/```(?:json)?\s*([\s\S]*?)```/);
       if (jsonMatch) {
@@ -98,9 +94,9 @@ async function extractPaperInfo(papers, researchGoal, apiKey, onProgress) {
       }
     }
 
-    // Small delay between batches
+    // Delay between batches to avoid rate limits
     if (i + batchSize < papers.length) {
-      await new Promise(r => setTimeout(r, 1000));
+      await sleep(6000);
     }
   }
 

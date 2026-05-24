@@ -3,7 +3,7 @@
  * Compiles all findings into a polished, cited academic report.
  */
 
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { callGemini } = require('./gemini');
 
 const SYNTHESIS_PROMPT = `You are a world-class academic writer. Generate a comprehensive, well-structured research report based on the analysis provided.
 
@@ -67,9 +67,6 @@ Important rules:
  * @returns {Promise<string>} Markdown report
  */
 async function synthesizeReport(plan, papers, analysis, apiKey, onProgress) {
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-
   onProgress && onProgress({
     type: 'synthesize_start',
     message: 'Generating comprehensive research report...'
@@ -79,12 +76,10 @@ async function synthesizeReport(plan, papers, analysis, apiKey, onProgress) {
   const context = buildReportContext(plan, papers, analysis);
 
   try {
-    const result = await model.generateContent([
+    let report = await callGemini(apiKey, [
       { text: SYNTHESIS_PROMPT },
       { text: context }
     ]);
-
-    let report = result.response.text();
 
     // Clean up any code block wrappers
     report = report.replace(/^```(?:markdown)?\s*/m, '').replace(/\s*```$/m, '');

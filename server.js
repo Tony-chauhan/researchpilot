@@ -48,9 +48,7 @@ app.post('/api/research', async (req, res) => {
     'Connection': 'keep-alive',
     'X-Accel-Buffering': 'no'
   });
-
-  // Send initial connection event
-  res.write(`data: ${JSON.stringify({ step: 'connected', type: 'connected', message: 'Connected to ResearchPilot agent' })}\n\n`);
+  res.flushHeaders();
 
   // Track if connection is still alive
   let isAlive = true;
@@ -58,11 +56,20 @@ app.post('/api/research', async (req, res) => {
     isAlive = false;
   });
 
+  // Helper: write SSE event and flush
+  const sendEvent = (data) => {
+    if (isAlive) {
+      res.write(`data: ${JSON.stringify(data)}\n\n`);
+      if (typeof res.flush === 'function') res.flush();
+    }
+  };
+
+  // Send initial connection event
+  sendEvent({ step: 'connected', type: 'connected', message: 'Connected to ResearchPilot agent' });
+
   try {
     await runResearchAgent(topic, apiKey, (event) => {
-      if (isAlive) {
-        res.write(`data: ${JSON.stringify(event)}\n\n`);
-      }
+      sendEvent(event);
     });
   } catch (error) {
     if (isAlive) {

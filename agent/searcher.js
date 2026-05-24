@@ -36,7 +36,7 @@ async function searchPapers(subQueries, onProgress) {
 
     // Search arXiv
     try {
-      const arxivPapers = await searchArxiv(sq.query, 8);
+      const arxivPapers = await searchArxiv(sq.query, 5);
       results.papers.push(...arxivPapers.map(p => ({ ...p, queryAspect: sq.aspect })));
       results.searchLog.push({
         source: 'arXiv',
@@ -67,7 +67,7 @@ async function searchPapers(subQueries, onProgress) {
 
     // Search Semantic Scholar
     try {
-      const ssPapers = await searchSemanticScholar(sq.query, 8);
+      const ssPapers = await searchSemanticScholar(sq.query, 5);
       results.papers.push(...ssPapers.map(p => ({ ...p, queryAspect: sq.aspect })));
       results.searchLog.push({
         source: 'Semantic Scholar',

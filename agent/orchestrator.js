@@ -10,6 +10,11 @@ const { extractPaperInfo } = require('./extractor');
 const { analyzePapers } = require('./analyzer');
 const { synthesizeReport } = require('./synthesizer');
 
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+// Cooldown between Gemini-heavy steps (free tier: 15 RPM)
+const GEMINI_COOLDOWN_MS = 8000;
+
 /**
  * Run the full autonomous research pipeline
  * @param {string} topic - User's research topic
@@ -53,7 +58,7 @@ async function runResearchAgent(topic, apiKey, onEvent) {
     });
 
     // ═══════════════════════════════════════════
-    // STEP 2: SEARCHING
+    // STEP 2: SEARCHING (no Gemini calls here)
     // ═══════════════════════════════════════════
     emit('searching', 'step_start', {
       message: '🔍 Searching academic databases...',
@@ -73,11 +78,18 @@ async function runResearchAgent(topic, apiKey, onEvent) {
       data: { totalPapers: searchResults.totalFound }
     });
 
+    // Cooldown before extraction (Gemini-heavy)
+    emit('extracting', 'step_start', {
+      message: '📖 Preparing to analyze paper contents...',
+      detail: `Cooling down before extraction (rate limit protection)`
+    });
+    await sleep(GEMINI_COOLDOWN_MS);
+
     // ═══════════════════════════════════════════
     // STEP 3: EXTRACTING
     // ═══════════════════════════════════════════
-    emit('extracting', 'step_start', {
-      message: '📖 Analyzing paper contents...',
+    emit('extracting', 'step_progress', {
+      message: `📖 Analyzing ${searchResults.papers.length} papers...`,
       detail: `Extracting key information from ${searchResults.papers.length} papers`
     });
 
@@ -107,6 +119,9 @@ async function runResearchAgent(topic, apiKey, onEvent) {
       }
     });
 
+    // Cooldown before analysis
+    await sleep(GEMINI_COOLDOWN_MS);
+
     // ═══════════════════════════════════════════
     // STEP 4: ANALYZING
     // ═══════════════════════════════════════════
@@ -131,6 +146,9 @@ async function runResearchAgent(topic, apiKey, onEvent) {
         maturity: analysis.overallMaturity
       }
     });
+
+    // Cooldown before synthesis
+    await sleep(GEMINI_COOLDOWN_MS);
 
     // ═══════════════════════════════════════════
     // STEP 5: SYNTHESIZING
