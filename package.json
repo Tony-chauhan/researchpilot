@@ -1,0 +1,19 @@
+{
+  "name": "researchpilot",
+  "version": "1.0.0",
+  "description": "ResearchPilot — Autonomous AI Research Agent that searches papers, analyzes findings, and generates structured research reports",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": ["ai", "research", "agent", "agentic", "hackathon", "gemini"],
+  "author": "ResearchPilot Team",
+  "license": "MIT",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.0",
+    "express": "^4.21.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5"
+  }
+}
