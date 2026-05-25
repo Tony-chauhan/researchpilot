@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg-primary: #1a1a1a;
+  --color-bg-secondary: #2a2a2a;
+  --color-bg-surface: #232323;
+  --color-bg-elevated: #303030;
+  --color-text-primary: #ececec;
+  --color-text-secondary: #a0a0a0;
+  --color-text-muted: #6b6b6b;
+  --color-accent: #d97706;
+  --color-accent-muted: rgba(217, 119, 6, 0.15);
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-active: rgba(255, 255, 255, 0.16);
+  --color-success: #22c55e;
+  --color-error: #ef4444;
+
+  --font-sans: var(--font-dm-sans), system-ui, -apple-system, sans-serif;
+  --font-heading:
+    var(--font-space-grotesk), system-ui, -apple-system, sans-serif;
+
+  --animate-fade-in: fade-in 0.3s ease-out forwards;
+
+  @keyframes fade-in {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+}
+
+@layer base {
+  html {
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--color-bg-primary);
+    background-image:
+      radial-gradient(
+        circle at top left,
+        rgba(217, 119, 6, 0.08),
+        transparent 28%
+      ),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.015), transparent 30%);
+    color: var(--color-text-primary);
+    font-family: var(--font-sans);
+    min-height: 100dvh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-heading);
+    color: var(--color-text-primary);
+    letter-spacing: -0.02em;
+    font-weight: 600;
+  }
+
+  ::selection {
+    background-color: var(--color-accent-muted);
+    color: var(--color-accent);
+  }
+}
+
+@layer utilities {
+  .surface {
+    @apply bg-bg-surface border border-border;
+  }
+
+  .surface-elevated {
+    @apply bg-bg-elevated border border-border;
+  }
+
+  .focus-ring {
+    @apply outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary;
+  }
+}
+
+@layer base {
+  .dialog-overlay {
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+  }
+
+  .dialog-content {
+    opacity: 1;
+  }
+}
