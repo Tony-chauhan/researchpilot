@@ -65,9 +65,7 @@ async function planResearch(topic, apiKey) {
       researchGoal: `Comprehensive review of ${topic}`,
       subQueries: [
         { query: topic, aspect: 'general', rationale: 'Main topic search' },
-        { query: `${topic} survey review`, aspect: 'surveys', rationale: 'Find survey papers' },
-        { query: `${topic} recent advances 2024 2025`, aspect: 'recent', rationale: 'Latest developments' },
-        { query: `${topic} applications`, aspect: 'applications', rationale: 'Practical applications' }
+        { query: `${topic} recent advances`, aspect: 'recent', rationale: 'Latest developments' }
       ],
       keyTerms: topic.split(' ').filter(w => w.length > 3),
       timeframe: 'last 3 years'

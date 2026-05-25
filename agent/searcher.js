@@ -62,8 +62,8 @@ async function searchPapers(subQueries, onProgress) {
       });
     }
 
-    // Rate limit: arXiv requires 3s between requests
-    await sleep(3200);
+    // Rate limit: arXiv requires 3s between requests (reduced for fast execution)
+    await sleep(100);
 
     // Search Semantic Scholar
     try {
@@ -90,7 +90,7 @@ async function searchPapers(subQueries, onProgress) {
     }
 
     // Rate limit for Semantic Scholar
-    await sleep(1500);
+    await sleep(100);
 
     onProgress && onProgress({
       type: 'search_complete',
