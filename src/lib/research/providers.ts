@@ -1,4 +1,4 @@
-import { createGoogle } from "@ai-sdk/google";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createGroq } from "@ai-sdk/groq";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
@@ -68,12 +68,12 @@ const API_KEY_CONFIG: Record<
 
 const PROVIDER_FACTORY: Record<
   Provider,
-  typeof createOpenAI | typeof createGroq | typeof createOpenRouter | typeof createGoogle
+  typeof createOpenAI | typeof createGroq | typeof createOpenRouter | typeof createGoogleGenerativeAI
 > = {
   openai: createOpenAI,
   groq: createGroq,
   openrouter: createOpenRouter,
-  google: createGoogle,
+  google: createGoogleGenerativeAI,
 };
 
 const providerCache = new Map<Provider, ReturnType<typeof createOpenAI>>();
