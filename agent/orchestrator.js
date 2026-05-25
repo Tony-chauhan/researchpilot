@@ -13,7 +13,7 @@ const { synthesizeReport } = require('./synthesizer');
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
 // Cooldown between Gemini-heavy steps (free tier: 15 RPM)
-const GEMINI_COOLDOWN_MS = 8000;
+const GEMINI_COOLDOWN_MS = 500;
 
 /**
  * Run the full autonomous research pipeline

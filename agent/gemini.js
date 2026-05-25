@@ -5,7 +5,7 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // Models to try in order (fallback chain)
-const MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.5-flash-lite'];
+const MODELS = ['gemini-2.5-flash-lite'];
 
 /**
  * Sleep for ms duration
@@ -22,8 +22,8 @@ function sleep(ms) {
  * @returns {Promise<string>} Generated text response
  */
 async function callGemini(apiKey, contents, options = {}) {
-  const maxRetries = options.maxRetries || 3;
-  const initialDelay = options.initialDelay || 2000;
+  const maxRetries = options.maxRetries !== undefined ? options.maxRetries : 1;
+  const initialDelay = options.initialDelay || 500;
 
   const genAI = new GoogleGenerativeAI(apiKey);
 
@@ -43,7 +43,8 @@ async function callGemini(apiKey, contents, options = {}) {
         if (is429 || is503) {
           // Extract retry delay from error if available
           const retryMatch = errMsg.match(/retry in (\d+)/i);
-          const retryDelay = retryMatch ? (parseInt(retryMatch[1]) + 5) * 1000 : initialDelay * Math.pow(2, attempt);
+          const rawDelay = retryMatch ? (parseInt(retryMatch[1]) + 5) * 1000 : initialDelay * Math.pow(2, attempt);
+          const retryDelay = Math.min(rawDelay, 1000); // Cap wait time at 1 second max for fast execution
 
           console.warn(`[Gemini] Rate limited on ${modelName} (attempt ${attempt + 1}/${maxRetries}). Waiting ${Math.round(retryDelay / 1000)}s...`);
 

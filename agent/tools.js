@@ -23,13 +23,25 @@ async function searchArxiv(query, maxResults = 10) {
 
   const url = `${ARXIV_API}?${params.toString()}`;
 
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`arXiv API error: ${response.status}`);
-  }
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 3000);
 
-  const xmlText = await response.text();
-  return parseArxivXml(xmlText);
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    if (!response.ok) {
+      throw new Error(`arXiv API error: ${response.status}`);
+    }
+
+    const xmlText = await response.text();
+    return parseArxivXml(xmlText);
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error('arXiv API request timed out');
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 /**
@@ -106,37 +118,52 @@ async function searchSemanticScholar(query, limit = 10) {
 
   const url = `${SEMANTIC_SCHOLAR_API}/paper/search?${params.toString()}`;
 
-  const response = await fetch(url, {
-    headers: { 'Accept': 'application/json' }
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 3000);
 
-  if (!response.ok) {
-    // Semantic Scholar has rate limits — handle gracefully
-    if (response.status === 429) {
-      console.warn('Semantic Scholar rate limited, skipping...');
+  try {
+    const response = await fetch(url, {
+      headers: { 'Accept': 'application/json' },
+      signal: controller.signal
+    });
+
+    if (!response.ok) {
+      // Semantic Scholar has rate limits — handle gracefully
+      if (response.status === 429) {
+        console.warn('Semantic Scholar rate limited, skipping...');
+        return [];
+      }
+      throw new Error(`Semantic Scholar API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (!data.data) return [];
+
+    return data.data
+      .filter(paper => paper.abstract) // Only papers with abstracts
+      .map(paper => ({
+        source: 'semantic_scholar',
+        id: paper.paperId,
+        title: paper.title,
+        authors: (paper.authors || []).slice(0, 5).map(a => a.name),
+        abstract: paper.abstract,
+        published: paper.publicationDate || String(paper.year || 'Unknown'),
+        year: paper.year,
+        citationCount: paper.citationCount || 0,
+        fieldsOfStudy: paper.fieldsOfStudy || [],
+        url: paper.url || `https://www.semanticscholar.org/paper/${paper.paperId}`
+      }));
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      console.warn('Semantic Scholar API request timed out, skipping...');
       return [];
     }
-    throw new Error(`Semantic Scholar API error: ${response.status}`);
+    console.warn(`Semantic Scholar error: ${error.message}, skipping...`);
+    return [];
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  const data = await response.json();
-
-  if (!data.data) return [];
-
-  return data.data
-    .filter(paper => paper.abstract) // Only papers with abstracts
-    .map(paper => ({
-      source: 'semantic_scholar',
-      id: paper.paperId,
-      title: paper.title,
-      authors: (paper.authors || []).slice(0, 5).map(a => a.name),
-      abstract: paper.abstract,
-      published: paper.publicationDate || String(paper.year || 'Unknown'),
-      year: paper.year,
-      citationCount: paper.citationCount || 0,
-      fieldsOfStudy: paper.fieldsOfStudy || [],
-      url: paper.url || `https://www.semanticscholar.org/paper/${paper.paperId}`
-    }));
 }
 
 /**
