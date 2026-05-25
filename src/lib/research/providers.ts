@@ -21,9 +21,9 @@ const DEFAULT_MODELS: Record<Provider, Record<ModelTier, string>> = {
     strategic: "meta-llama/llama-4-scout-17b-16e-instruct",
   },
   openrouter: {
-    fast: "google/gemma-3-27b-it:free",
-    smart: "meta-llama/llama-3.3-70b-instruct:free",
-    strategic: "qwen/qwen3-coder:free",
+    fast: "z-ai/glm-4.5-air:free",
+    smart: "z-ai/glm-4.5-air:free",
+    strategic: "z-ai/glm-4.5-air:free",
   },
   google: {
     fast: "gemini-2.5-flash-lite",
