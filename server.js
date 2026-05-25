@@ -44,9 +44,11 @@ app.post('/api/research', async (req, res) => {
   // Set up SSE headers
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
-    'Cache-Control': 'no-cache',
+    'Cache-Control': 'no-cache, no-transform',
     'Connection': 'keep-alive',
-    'X-Accel-Buffering': 'no'
+    'X-Accel-Buffering': 'no',
+    'Transfer-Encoding': 'chunked',
+    'Content-Encoding': 'none'
   });
   res.flushHeaders();
 
